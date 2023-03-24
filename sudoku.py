@@ -1,4 +1,5 @@
 import numpy as np
+from argparse import ArgumentParser
 
 
 WIDTH = 9
@@ -15,7 +16,7 @@ def sgr(n: int):
 
 
 def print_wf_grid(wf_grid, uncertain=u"\u001b[31m", certain=u"\u001b[32m"):
-    print(SGR_RESET)
+    print(SGR_RESET, end="")
     for r in range(wf_grid.shape[0]):
         for c in range(wf_grid.shape[1]):
             state = wf_grid[r, c]
@@ -25,20 +26,7 @@ def print_wf_grid(wf_grid, uncertain=u"\u001b[31m", certain=u"\u001b[32m"):
             else:
                 print(uncertain + str(state_count), end=" ")
         print()
-    print(SGR_RESET)
-
-
-grid = np.array([
-    [5, 3, 0, 0, 7, 0, 0, 0, 0],
-    [6, 0, 0, 1, 9, 5, 0, 0, 0],
-    [0, 9, 8, 0, 0, 0, 0, 6, 0],
-    [8, 0, 0, 0, 6, 0, 0, 0, 3],
-    [4, 0, 0, 8, 0, 3, 0, 0, 1],
-    [7, 0, 0, 0, 2, 0, 0, 0, 6],
-    [0, 6, 0, 0, 0, 0, 2, 8, 0],
-    [0, 0, 0, 4, 1, 9, 0, 0, 5],
-    [0, 0, 0, 0, 8, 0, 0, 7, 9],
-])
+    print(SGR_RESET, end="")
 
 
 def get_dependents(row: int, col: int):
@@ -117,8 +105,8 @@ def make_wf_grid(grid):
 
 
 def solve_pass(wf_grid):
-    for r in range(grid.shape[0]):
-        for c in range(grid.shape[1]):
+    for r in range(wf_grid.shape[0]):
+        for c in range(wf_grid.shape[1]):
             if len(wf_grid[r, c]) != 1:
                 wf_grid[r, c] = possible_states(wf_grid, r, c)
 
@@ -132,10 +120,55 @@ def solved(wf_grid):
     return np.all(vectorised_len(wf_grid) == 1)
 
 
-print(grid)
-wf_grid = make_wf_grid(grid)
-print_wf_grid(wf_grid)
-while not solved(wf_grid):
-    wf_grid = solve_pass(wf_grid)
+def parse_flat_sudoku(flat_sudoku: str):
+    grid = np.empty([WIDTH, HEIGHT], dtype=np.int32)
+
+    for r in range(grid.shape[0]):
+        for c in range(grid.shape[1]):
+            grid[r, c] = int(flat_sudoku[r * grid.shape[1] + c])
+
+    return grid
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(
+        prog="wfc-sudoku",
+        description="Simple sudoku solver.",
+    )
+
+    parser.add_argument("sudoku", type=str, help="the sudoku to solve as a row-major string where a blank space is 0")
+
+    args = parser.parse_args()
+
+    flat_sudoku = args.sudoku
+
+    if len(flat_sudoku) != WIDTH * HEIGHT:
+        print(f"Sudoku is of incorrect size ({len(flat_sudoku)} != {WIDTH * HEIGHT}).")
+        exit()
+
+    # flat_puzzle = "530070000600195000098000060800060003400803001700020006060000280000419005000080079"
+
+    # grid = np.array([
+    #     [5, 3, 0, 0, 7, 0, 0, 0, 0],
+    #     [6, 0, 0, 1, 9, 5, 0, 0, 0],
+    #     [0, 9, 8, 0, 0, 0, 0, 6, 0],
+    #     [8, 0, 0, 0, 6, 0, 0, 0, 3],
+    #     [4, 0, 0, 8, 0, 3, 0, 0, 1],
+    #     [7, 0, 0, 0, 2, 0, 0, 0, 6],
+    #     [0, 6, 0, 0, 0, 0, 2, 8, 0],
+    #     [0, 0, 0, 4, 1, 9, 0, 0, 5],
+    #     [0, 0, 0, 0, 8, 0, 0, 7, 9],
+    # ])
+
+    wf_grid = make_wf_grid(parse_flat_sudoku(flat_sudoku))
+    print("INPUT")
     print_wf_grid(wf_grid)
+    i = 0
+    while not solved(wf_grid):
+        print(f"SOLVE PASS: {i}")
+        wf_grid = solve_pass(wf_grid)
+        print_wf_grid(wf_grid)
+        i += 1
+
+    print(f"Solved in {i} passes.")
 
