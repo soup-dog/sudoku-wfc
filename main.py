@@ -49,10 +49,9 @@ def possible_states(grid, row, col):
     for d in dependents:
         cell = grid[d[0], d[1]]
         if len(cell) == 1:
-            try:
-                state.remove(next(iter(cell)))
-            except KeyError:
-                pass
+            v = next(iter(cell))
+            if v in state:
+                state.remove(v)
 
     return state
 
