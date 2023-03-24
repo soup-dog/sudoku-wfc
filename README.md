@@ -6,3 +6,9 @@ Sample usage:
 ```commandline
 python sudoku.py 530070000600195000098000060800060003400803001700020006060000280000419005000080079
 ```
+
+# Requirements
+Requires numpy.
+```commandline
+pip install -r requirements.txt
+```
